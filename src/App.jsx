@@ -12,6 +12,8 @@ import AllTasks from "./pages/AllTaska"; // Fix the typo
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/Signup";
 import PendingTask from "./pages/pendingtask";
+import InProgressTask  from "./pages/inprogressTask"
+import CompletedTasks from "./pages/completedTask"
 
 export const ThemeContext = createContext();
 
@@ -63,21 +65,8 @@ const AuthRoute = ({ children }) => {
 
 
 
-const InProgressTasks = () => (
-  <div className="p-4">
-    <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-      In Progress
-    </h1>
-  </div>
-);
 
-const CompletedTasks = () => (
-  <div className="p-4">
-    <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-      Completed Tasks
-    </h1>
-  </div>
-);
+
 
 // Dashboard Routes Component
 const DashboardRoutes = () => {
@@ -86,7 +75,7 @@ const DashboardRoutes = () => {
       <Routes>
         <Route path="all" element={<AllTasks />} />
         <Route path="pending" element={<PendingTask />} />
-        <Route path="in-progress" element={<InProgressTasks />} />
+        <Route path="in-progress" element={<InProgressTask />} />
         <Route path="completed" element={<CompletedTasks />} />
         <Route path="" element={<Navigate to="all" replace />} />
       </Routes>

@@ -96,7 +96,12 @@ const SignupPage = () => {
 
     try {
       const response = await axios.post(
-        "https://taskybackend-gmpn.onrender.com/api/v1/auth/register"
+        "https://taskybackend-gmpn.onrender.com/api/v1/auth/register",
+        {
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+        }
       );
 
       navigate("/login");

@@ -40,7 +40,7 @@ const TaskManager = () => {
   const fetchTasks = async () => {
     setState(prev => ({ ...prev, isLoading: true }));
     try {
-      const { data } = await api.get('/task/pending');
+      const { data } = await api.get('/task/in-progress');
       setState(prev => ({ ...prev, tasks: data, isLoading: false }));
     } catch (error) {
       setState(prev => ({ ...prev, error: error.message, isLoading: false }));
@@ -282,7 +282,7 @@ const TaskManager = () => {
       >
         <div className="text-center ">
           <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-3">
-          Pending Task
+          In-progress Task
           </h1>
       
         </div>

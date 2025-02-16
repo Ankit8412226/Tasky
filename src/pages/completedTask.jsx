@@ -40,7 +40,7 @@ const TaskManager = () => {
   const fetchTasks = async () => {
     setState(prev => ({ ...prev, isLoading: true }));
     try {
-      const { data } = await api.get('/task/pending');
+      const { data } = await api.get('/task/completed');
       setState(prev => ({ ...prev, tasks: data, isLoading: false }));
     } catch (error) {
       setState(prev => ({ ...prev, error: error.message, isLoading: false }));
@@ -282,7 +282,7 @@ const TaskManager = () => {
       >
         <div className="text-center ">
           <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-3">
-          Pending Task
+          completed Task
           </h1>
       
         </div>
@@ -338,7 +338,7 @@ const TaskManager = () => {
               <Clock className="w-full h-full" />
             </motion.div>
             <h3 className="mt-6 text-xl font-medium text-gray-900">No Tasks Available</h3>
-            <p className="mt-2 text-gray-600">Create your first task to get started</p>
+            <p className="mt-2 text-gray-600">Complete your first task to get started</p>
           </motion.div>
         )}
       </motion.div>
