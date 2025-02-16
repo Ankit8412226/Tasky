@@ -5,16 +5,41 @@ import {
   Navigate,
   useLocation,
 } from "react-router-dom";
-import { LoginPage, SignupPage, ThemeProvider } from "./pages/index";
+
 import DashboardLayout from "./pages/dashboard";
-import { useState, useEffect } from "react";
-import AllTasks from "./pages/AllTaska";
+import { useState, useEffect, createContext } from "react";
+import AllTasks from "./pages/AllTaska"; // Fix the typo
+import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/Signup";
+
+export const ThemeContext = createContext();
+
+// Theme Provider Component
+export const ThemeProvider = ({ children }) => {
+  // Get initial theme from localStorage or default to light
+  const [darkMode, setDarkMode] = useState(() => {
+    const savedTheme = localStorage.getItem("theme");
+    return savedTheme === "dark";
+  });
+
+  // Update theme in localStorage and apply class whenever it changes
+  useEffect(() => {
+    localStorage.setItem("theme", darkMode ? "dark" : "light");
+    document.documentElement.classList.toggle("dark", darkMode);
+  }, [darkMode]);
+
+  return (
+    <ThemeContext.Provider value={{ darkMode, setDarkMode }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+};
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem("token");
   const location = useLocation();
 
-  if (token) {
+  if (!token) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

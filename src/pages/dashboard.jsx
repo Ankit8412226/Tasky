@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   FiMenu,
   FiSun,
@@ -9,8 +9,13 @@ import {
   FiInbox,
   FiX,
   FiPlus,
+  FiUpload,
+  FiCalendar,
+  FiAlertCircle,
 } from "react-icons/fi";
 import { motion } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
+import axios from "axios";
 
 // Sidebar Component
 const Sidebar = ({ isOpen, setIsOpen }) => {
@@ -36,7 +41,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         transform transition-transform duration-200 ease-in-out
         ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
         bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700
-        flex flex-col
+        flex flex-col shadow-lg
       `}
       >
         <div className="h-16 flex items-center px-4 border-b border-gray-200 dark:border-gray-700">
@@ -82,8 +87,7 @@ const Header = ({ isOpen, setIsOpen, darkMode, setDarkMode, setShowModal }) => {
     <header
       className="fixed top-0 right-0 z-20 h-16 
       bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700
-      flex items-center px-4
-      w-full lg:w-[calc(100%-16rem)] lg:ml-64"
+      flex items-center px-4 w-full lg:w-[calc(100%-16rem)] lg:ml-64 shadow-md"
     >
       <button
         className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 lg:hidden"
@@ -93,7 +97,7 @@ const Header = ({ isOpen, setIsOpen, darkMode, setDarkMode, setShowModal }) => {
       </button>
 
       <button
-        className="ml-4 px-4 py-2 flex items-center bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
+        className="ml-4 px-4 py-2 flex items-center bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
         onClick={() => setShowModal(true)}
       >
         <FiPlus className="mr-2" /> Add Task
@@ -135,68 +139,246 @@ const TaskModal = ({ showModal, setShowModal }) => {
     description: "",
     status: "pending",
     deadline: "",
+    image: null,
   });
+  const [preview, setPreview] = useState(null);
+  const [error, setError] = useState("");
+  const fileInputRef = useRef(null);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        // 5MB limit
+        setError("Image size should be less than 5MB");
+        return;
+      }
+      if (!file.type.startsWith("image/")) {
+        setError("Please upload an image file");
+        return;
+      }
+      setTask({ ...task, image: file });
+      setPreview(URL.createObjectURL(file));
+      setError("");
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Task Created:", task);
-    setShowModal(false);
+    setLoading(true);
+    setError("");
+
+    try {
+      const formData = new FormData();
+      formData.append("title", task.title);
+      formData.append("description", task.description);
+      formData.append("status", task.status);
+      formData.append("deadline", task.deadline);
+      if (task.image) {
+        formData.append("image", task.image);
+      }
+      const token = localStorage.getItem("token");
+
+      const response = await axios.post(
+        "https://taskybackend-nwza.onrender.com/api/v1/task/",
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Attach token in Authorization header
+          },
+        }
+      );
+
+      console.log("Task Created:", response.data);
+      setShowModal(false);
+      setTask({
+        title: "",
+        description: "",
+        status: "pending",
+        deadline: "",
+        image: null,
+      });
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to create task");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div
-      className={`fixed inset-0 z-50 flex items-center justify-center ${
-        showModal ? "visible" : "invisible"
-      }`}
-    >
-      <div
-        className="bg-black/50 absolute inset-0"
-        onClick={() => setShowModal(false)}
-      />
-      <motion.div
-        initial={{ opacity: 0, y: -50 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -50 }}
-        className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg relative w-96"
-      >
-        <button
-          className="absolute top-3 right-3"
-          onClick={() => setShowModal(false)}
-        >
-          <FiX size={20} className="text-gray-500" />
-        </button>
-        <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">
-          Create New Task
-        </h2>
-        <form onSubmit={handleSubmit} className="space-y-3">
-          <input
-            type="text"
-            placeholder="Title"
-            className="w-full p-2 border rounded"
-            onChange={(e) => setTask({ ...task, title: e.target.value })}
-            required
+    <AnimatePresence>
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowModal(false)}
           />
-          <textarea
-            placeholder="Description"
-            className="w-full p-2 border rounded"
-            onChange={(e) => setTask({ ...task, description: e.target.value })}
-            required
-          />
-          <input
-            type="date"
-            className="w-full p-2 border rounded"
-            onChange={(e) => setTask({ ...task, deadline: e.target.value })}
-            required
-          />
-          <button
-            type="submit"
-            className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
+
+          <motion.div
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -50 }}
+            className="relative w-full max-w-md mx-4 bg-white dark:bg-gray-800 rounded-xl shadow-lg"
           >
-            Create Task
-          </button>
-        </form>
-      </motion.div>
-    </div>
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                  Create New Task
+                </h2>
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="p-2 text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                >
+                  <FiX className="w-5 h-5" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Title
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Task title"
+                    className="w-full p-2.5 text-gray-900 dark:text-white bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    value={task.title}
+                    onChange={(e) =>
+                      setTask({ ...task, title: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Description
+                  </label>
+                  <textarea
+                    placeholder="Task description"
+                    rows="3"
+                    className="w-full p-2.5 text-gray-900 dark:text-white bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    value={task.description}
+                    onChange={(e) =>
+                      setTask({ ...task, description: e.target.value })
+                    }
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Status
+                  </label>
+                  <select
+                    className="w-full p-2.5 text-gray-900 dark:text-white bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    value={task.status}
+                    onChange={(e) =>
+                      setTask({ ...task, status: e.target.value })
+                    }
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="in-progress">In Progress</option>
+                    <option value="completed">Completed</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Deadline
+                  </label>
+                  <div className="relative">
+                    <FiCalendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="date"
+                      className="w-full pl-10 p-2.5 text-gray-900 dark:text-white bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      value={task.deadline}
+                      onChange={(e) =>
+                        setTask({ ...task, deadline: e.target.value })
+                      }
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Task Image
+                  </label>
+                  <div
+                    className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-lg hover:border-gray-400 dark:hover:border-gray-500 transition-colors cursor-pointer"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <div className="space-y-1 text-center">
+                      {preview ? (
+                        <img
+                          src={preview}
+                          alt="Preview"
+                          className="mx-auto h-32 w-32 object-cover rounded-lg"
+                        />
+                      ) : (
+                        <FiUpload className="mx-auto h-12 w-12 text-gray-400" />
+                      )}
+                      <div className="flex text-sm text-gray-600 dark:text-gray-400">
+                        <label className="relative cursor-pointer rounded-md font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 focus-within:outline-none">
+                          <span>Upload a file</span>
+                          <input
+                            ref={fileInputRef}
+                            type="file"
+                            className="sr-only"
+                            accept="image/*"
+                            onChange={handleImageChange}
+                          />
+                        </label>
+                        <p className="pl-1">or drag and drop</p>
+                      </div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        PNG, JPG, GIF up to 5MB
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {error && (
+                  <div className="flex items-center gap-2 text-red-600 dark:text-red-400 text-sm">
+                    <FiAlertCircle className="w-4 h-4" />
+                    <span>{error}</span>
+                  </div>
+                )}
+
+                <div className="flex gap-3 mt-6">
+                  <button
+                    type="button"
+                    onClick={() => setShowModal(false)}
+                    className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className={`flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    {loading ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span>Creating...</span>
+                      </div>
+                    ) : (
+                      "Create Task"
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
   );
 };
 

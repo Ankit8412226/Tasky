@@ -4,9 +4,13 @@ import { HTML5Backend } from "react-dnd-html5-backend";
 import axios from "axios";
 import { FiEdit, FiTrash } from "react-icons/fi";
 import { motion } from "framer-motion";
+import Modal from "react-modal";
 
 const AllTask = () => {
   const [tasks, setTasks] = useState([]);
+  const [modalIsOpen, setModalIsOpen] = useState(false);
+  const [currentTask, setCurrentTask] = useState(null);
+  const token = localStorage.getItem("token"); // Add your token here
 
   useEffect(() => {
     fetchTasks();
@@ -15,7 +19,8 @@ const AllTask = () => {
   const fetchTasks = async () => {
     try {
       const response = await axios.get(
-        "https://taskybackend-nwza.onrender.com/api/tasks"
+        "https://taskybackend-nwza.onrender.com/api/v1/task/",
+        { headers: { Authorization: `Bearer ${token}` } } // Include token in headers
       );
       setTasks(response.data);
     } catch (error) {
@@ -26,8 +31,9 @@ const AllTask = () => {
   const updateTaskStatus = async (taskId, newStatus) => {
     try {
       await axios.put(
-        `https://taskybackend-nwza.onrender.com/api/tasks/${taskId}`,
-        { status: newStatus }
+        `https://taskybackend-nwza.onrender.com/api/v1/task/${taskId}`, // Corrected to use taskId directly
+        { status: newStatus },
+        { headers: { Authorization: `Bearer ${token}` } } // Include token in headers
       );
       setTasks((prev) =>
         prev.map((task) =>
@@ -42,12 +48,28 @@ const AllTask = () => {
   const deleteTask = async (taskId) => {
     try {
       await axios.delete(
-        `https://taskybackend-nwza.onrender.com/api/tasks/${taskId}`
+        `https://taskybackend-nwza.onrender.com/api/v1/task/${taskId}`, // Corrected to use taskId directly
+        { headers: { Authorization: `Bearer ${token}` } } // Include token in headers
       );
       setTasks((prev) => prev.filter((task) => task._id !== taskId));
     } catch (error) {
       console.error("Error deleting task", error);
     }
+  };
+
+  const openModal = (task) => {
+    setCurrentTask(task);
+    setModalIsOpen(true);
+  };
+
+  const closeModal = () => {
+    setCurrentTask(null);
+    setModalIsOpen(false);
+  };
+
+  const handleUpdateTask = async (updatedTask) => {
+    await updateTaskStatus(updatedTask._id, updatedTask.status);
+    closeModal();
   };
 
   return (
@@ -60,14 +82,33 @@ const AllTask = () => {
             tasks={tasks.filter((task) => task.status === status)}
             updateTaskStatus={updateTaskStatus}
             deleteTask={deleteTask}
+            openModal={openModal}
           />
         ))}
       </div>
+      <Modal isOpen={modalIsOpen} onRequestClose={closeModal}>
+        {currentTask && (
+          <div>
+            <h2>Edit Task</h2>
+            <input
+              type="text"
+              value={currentTask.title}
+              onChange={(e) => setCurrentTask({ ...currentTask, title: e.target.value })}
+            />
+            <textarea
+              value={currentTask.description}
+              onChange={(e) => setCurrentTask({ ...currentTask, description: e.target.value })}
+            />
+            <button onClick={() => handleUpdateTask(currentTask)}>Update Task</button>
+            <button onClick={closeModal}>Cancel</button>
+          </div>
+        )}
+      </Modal>
     </DndProvider>
   );
 };
 
-const TaskColumn = ({ status, tasks, updateTaskStatus, deleteTask }) => {
+const TaskColumn = ({ status, tasks, updateTaskStatus, deleteTask, openModal }) => {
   const [{ isOver }, drop] = useDrop({
     accept: "TASK",
     drop: (item) => updateTaskStatus(item.id, status),
@@ -88,14 +129,14 @@ const TaskColumn = ({ status, tasks, updateTaskStatus, deleteTask }) => {
       </h2>
       <div className="space-y-4">
         {tasks.map((task) => (
-          <TaskCard key={task._id} task={task} deleteTask={deleteTask} />
+          <TaskCard key={task._id} task={task} deleteTask={deleteTask} openModal={openModal} />
         ))}
       </div>
     </div>
   );
 };
 
-const TaskCard = ({ task, deleteTask }) => {
+const TaskCard = ({ task, deleteTask, openModal }) => {
   const [{ isDragging }, drag] = useDrag({
     type: "TASK",
     item: { id: task._id },
@@ -121,9 +162,10 @@ const TaskCard = ({ task, deleteTask }) => {
         <p className="text-sm text-gray-600 dark:text-gray-300">
           {task.description}
         </p>
+        <img src={`https://taskybackend-nwza.onrender.com/uploads/${task.image}`} alt={task.title} /> {/* Corrected image path */}
       </div>
       <div className="flex space-x-2">
-        <button className="text-blue-500 hover:text-blue-700">
+        <button className="text-blue-500 hover:text-blue-700" onClick={() => openModal(task)}>
           <FiEdit size={16} />
         </button>
         <button

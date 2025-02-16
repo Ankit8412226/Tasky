@@ -1,48 +1,30 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
   FiMail,
   FiLock,
-  FiUser,
+  FiLogIn,
+  FiChevronRight,
   FiSun,
   FiMoon,
-  FiLogIn,
-  FiUserPlus,
-  FiChevronRight,
 } from "react-icons/fi";
-import { motion, AnimatePresence } from "framer-motion";
-
-const ThemeContext = React.createContext();
-
-export const ThemeProvider = ({ children }) => {
-  const [darkMode, setDarkMode] = useState(false);
-
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  }, [darkMode]);
-
-  return (
-    <ThemeContext.Provider value={{ darkMode, setDarkMode }}>
-      {children}
-    </ThemeContext.Provider>
-  );
-};
+import { motion } from "framer-motion";
+import { ThemeContext } from "../App";
 
 const ThemeToggle = () => {
-  const { darkMode, setDarkMode } = React.useContext(ThemeContext);
+  const { darkMode, setDarkMode } = useContext(ThemeContext);
 
   return (
     <motion.button
       whileHover={{ scale: 1.1 }}
       whileTap={{ scale: 0.9 }}
       onClick={() => setDarkMode(!darkMode)}
-      className="fixed top-4 right-4 p-2 rounded-full bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 
-        shadow-md hover:shadow-lg transition-all duration-300 z-50"
+      className="fixed top-4 right-4 p-2 rounded-full 
+        bg-white dark:bg-gray-800 
+        text-blue-600 dark:text-blue-400 
+        shadow-md hover:shadow-lg 
+        transition-all duration-300 z-50"
     >
       {darkMode ? (
         <FiSun className="w-5 h-5" />
@@ -86,7 +68,7 @@ const Button = ({ children, loading, ...props }) => (
       hover:from-blue-700 hover:to-blue-600 
       focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
       disabled:opacity-50 shadow-md
-      transition-all duration-200 cursor-pointer"
+      transition-all duration-200"
   >
     {loading ? (
       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -96,14 +78,14 @@ const Button = ({ children, loading, ...props }) => (
   </motion.button>
 );
 
-const AuthPage = ({ isLogin }) => {
+const LoginPage = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -111,17 +93,14 @@ const AuthPage = ({ isLogin }) => {
     setError("");
 
     try {
-      const endpoint = isLogin
-        ? "https://taskybackend-nwza.onrender.com/api/v1/auth/login"
-        : "https://taskybackend-nwza.onrender.com/api/v1/auth/register";
-      const response = await axios.post(endpoint, formData);
+      const response = await axios.post(
+        "https://taskybackend-nwza.onrender.com/api/v1/auth/login",
+        formData
+      );
       localStorage.setItem("token", response.data.token);
       navigate("/dashboard");
     } catch (err) {
-      setError(
-        err.response?.data?.message ||
-          (isLogin ? "Invalid credentials" : "Failed to create account")
-      );
+      setError(err.response?.data?.message || "Invalid credentials");
     } finally {
       setLoading(false);
     }
@@ -133,8 +112,9 @@ const AuthPage = ({ isLogin }) => {
 
   return (
     <div
-      className="h-screen flex items-center justify-center
-      bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 
+      className="h-screen flex items-center justify-center 
+      bg-gradient-to-br from-gray-50 to-gray-100 
+      dark:from-gray-900 dark:to-gray-800 
       transition-colors duration-300"
     >
       <ThemeToggle />
@@ -154,44 +134,20 @@ const AuthPage = ({ isLogin }) => {
           </motion.div>
           <div className="text-center">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {isLogin ? "Welcome back" : "Join Tasky"}
+              Welcome back
             </h2>
             <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-              {isLogin
-                ? "Let's pick up where you left off"
-                : "Start organizing your tasks today"}
+              Let's pick up where you left off
             </p>
           </div>
         </div>
 
         <div
           className="bg-white dark:bg-gray-800 p-5 
-          shadow-md rounded-xl border border-gray-200 dark:border-gray-700"
+          shadow-md rounded-xl 
+          border border-gray-200 dark:border-gray-700"
         >
           <form className="space-y-4" onSubmit={handleSubmit}>
-            <AnimatePresence mode="wait">
-              {!isLogin && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                >
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Full Name
-                  </label>
-                  <Input
-                    icon={FiUser}
-                    type="text"
-                    name="name"
-                    placeholder="Enter your name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    required
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
-
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Email address
@@ -215,7 +171,7 @@ const AuthPage = ({ isLogin }) => {
                 icon={FiLock}
                 type="password"
                 name="password"
-                placeholder={isLogin ? "Enter password" : "Create password"}
+                placeholder="Enter password"
                 value={formData.password}
                 onChange={handleChange}
                 required
@@ -226,8 +182,10 @@ const AuthPage = ({ isLogin }) => {
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 
-                  p-2.5 rounded-lg border border-red-100 dark:border-red-800"
+                className="text-sm text-red-600 dark:text-red-400 
+                  bg-red-50 dark:bg-red-900/20 
+                  p-2.5 rounded-lg 
+                  border border-red-100 dark:border-red-800"
               >
                 {error}
               </motion.div>
@@ -236,12 +194,8 @@ const AuthPage = ({ isLogin }) => {
             <Button type="submit" loading={loading}>
               {!loading && (
                 <>
-                  {isLogin ? (
-                    <FiLogIn className="w-5 h-5" />
-                  ) : (
-                    <FiUserPlus className="w-5 h-5" />
-                  )}
-                  {isLogin ? "Sign in" : "Create account"}
+                  <FiLogIn className="w-5 h-5" />
+                  Sign in
                   <FiChevronRight className="w-5 h-5" />
                 </>
               )}
@@ -254,7 +208,7 @@ const AuthPage = ({ isLogin }) => {
                 </div>
                 <div className="relative flex justify-center text-sm">
                   <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">
-                    {isLogin ? "New to Tasky?" : "Already have an account?"}
+                    New to Tasky?
                   </span>
                 </div>
               </div>
@@ -263,7 +217,7 @@ const AuthPage = ({ isLogin }) => {
                 type="button"
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.99 }}
-                onClick={() => navigate(isLogin ? "/signup" : "/login")}
+                onClick={() => navigate("/signup")}
                 className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 px-4 
                   border border-gray-200 dark:border-gray-700 rounded-lg
                   text-base font-medium text-gray-700 dark:text-gray-200
@@ -271,7 +225,7 @@ const AuthPage = ({ isLogin }) => {
                   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
                   transition-colors duration-200"
               >
-                {isLogin ? "Create an account" : "Sign in to your account"}
+                Create an account
               </motion.button>
             </div>
           </form>
@@ -281,5 +235,4 @@ const AuthPage = ({ isLogin }) => {
   );
 };
 
-export const LoginPage = () => <AuthPage isLogin />;
-export const SignupPage = () => <AuthPage isLogin={false} />;
+export default LoginPage;
