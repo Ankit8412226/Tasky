@@ -14,7 +14,7 @@ const PendingTask = () => {
   useEffect(() => {
     const fetchTasks = async () => {
       try {
-        const response = await axios.get('https://taskybackend-hpaf.onrender.com/api/v1/task?status=pending', {
+        const response = await axios.get('https://taskybackend-gmpn.onrender.com/api/v1/task?status=pending', {
           headers: { Authorization: `Bearer ${token}` },
         });
         setTasks(response.data);

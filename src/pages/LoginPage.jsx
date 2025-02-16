@@ -94,7 +94,7 @@ const LoginPage = () => {
 
     try {
       const response = await axios.post(
-        "https://taskybackend-nwza.onrender.com/api/v1/auth/login",
+        "https://taskybackend-gmpn.onrender.com/api/v1/auth/login",
         formData
       );
       localStorage.setItem("token", response.data.token);

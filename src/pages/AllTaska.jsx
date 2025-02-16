@@ -19,7 +19,7 @@ const AllTask = () => {
   const fetchTasks = async () => {
     try {
       const response = await axios.get(
-        "https://taskybackend-nwza.onrender.com/api/v1/task/",
+        "https://taskybackend-gmpn.onrender.com/api/v1/task/",
         { headers: { Authorization: `Bearer ${token}` } } // Include token in headers
       );
       setTasks(response.data);
@@ -31,7 +31,7 @@ const AllTask = () => {
   const updateTaskStatus = async (taskId, newStatus) => {
     try {
       await axios.put(
-        `https://taskybackend-nwza.onrender.com/api/v1/task/${taskId}`, // Corrected to use taskId directly
+        `https://taskybackend-gmpn.onrender.com/api/v1/task/${taskId}`, // Corrected to use taskId directly
         { status: newStatus },
         { headers: { Authorization: `Bearer ${token}` } } // Include token in headers
       );
@@ -48,7 +48,7 @@ const AllTask = () => {
   const deleteTask = async (taskId) => {
     try {
       await axios.delete(
-        `https://taskybackend-nwza.onrender.com/api/v1/task/${taskId}`, // Corrected to use taskId directly
+        `https://taskybackend-gmpn.onrender.com/api/v1/task/${taskId}`, // Corrected to use taskId directly
         { headers: { Authorization: `Bearer ${token}` } } // Include token in headers
       );
       setTasks((prev) => prev.filter((task) => task._id !== taskId));
@@ -162,7 +162,7 @@ const TaskCard = ({ task, deleteTask, openModal }) => {
         <p className="text-sm text-gray-600 dark:text-gray-300">
           {task.description}
         </p>
-        <img src={`https://taskybackend-nwza.onrender.com/uploads/${task.image}`} alt={task.title} /> {/* Corrected image path */}
+        <img src={`https://taskybackend-gmpn.onrender.com/uploads/${task.image}`} alt={task.title} /> {/* Corrected image path */}
       </div>
       <div className="flex space-x-2">
         <button className="text-blue-500 hover:text-blue-700" onClick={() => openModal(task)}>
