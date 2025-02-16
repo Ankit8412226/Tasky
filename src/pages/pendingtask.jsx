@@ -14,7 +14,7 @@ const PendingTask = () => {
   useEffect(() => {
     const fetchTasks = async () => {
       try {
-        const response = await axios.get('https://taskybackend-gmpn.onrender.com/api/v1/task?status=pending', {
+        const response = await axios.get('https://taskybackend-gmpn.onrender.com/api/v1/task/pending', {
           headers: { Authorization: `Bearer ${token}` },
         });
         setTasks(response.data);
@@ -51,7 +51,7 @@ const PendingTask = () => {
 
   return (
     <div className="bg-gradient-to-r from-blue-300 to-indigo-600 min-h-screen flex items-center justify-center p-6">
-      <div className="bg-white p-8 rounded-lg shadow-2xl max-w-lg w-full">
+      <div className="bg-white p-8 rounded-lg shadow-2xl max-w-4xl w-full">
         <h1 className="text-3xl font-bold text-center text-blue-800 mb-6">Pending Tasks</h1>
         <ul className="space-y-4">
           {tasks.map(task => (
@@ -64,7 +64,7 @@ const PendingTask = () => {
             >
               <h2 className="text-xl font-semibold text-gray-900">{task.title}</h2>
               <p className="text-gray-600">{task.description}</p>
-              <div className="flex justify-between items-center mt-4">
+              <div className="flex flex-col sm:flex-row justify-between items-center mt-4 space-y-4 sm:space-y-0">
                 <span className={`text-sm font-medium ${task.status === 'completed' ? 'text-green-500' : 'text-yellow-500'}`}>Status: {task.status}</span>
                 <span className="text-sm text-gray-500">Deadline: {new Date(task.deadline).toLocaleDateString()}</span>
                 <motion.button 
@@ -81,7 +81,7 @@ const PendingTask = () => {
       </div>
 
       {/* Modal for Updating Status */}
-      <Dialog open={isModalOpen} onClose={closeModal} className="fixed inset-0 flex items-center justify-center">
+      <Dialog open={isModalOpen} onClose={closeModal} className="fixed inset-0 flex items-center justify-center p-4">
         <Dialog.Overlay className="fixed inset-0 bg-black opacity-50" />
         <div className="bg-white p-6 rounded-lg shadow-lg z-10 max-w-md w-full">
           <Dialog.Title className="text-xl font-bold mb-4 text-gray-900">Update Task Status</Dialog.Title>
