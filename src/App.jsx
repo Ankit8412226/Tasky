@@ -11,6 +11,7 @@ import { useState, useEffect, createContext } from "react";
 import AllTasks from "./pages/AllTaska"; // Fix the typo
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/Signup";
+import PendingTask from "./pages/pendingtask";
 
 export const ThemeContext = createContext();
 
@@ -60,13 +61,7 @@ const AuthRoute = ({ children }) => {
 
 // Dashboard Pages
 
-const PendingTasks = () => (
-  <div className="p-4">
-    <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-      Pending Tasks
-    </h1>
-  </div>
-);
+
 
 const InProgressTasks = () => (
   <div className="p-4">
@@ -90,7 +85,7 @@ const DashboardRoutes = () => {
     <DashboardLayout>
       <Routes>
         <Route path="all" element={<AllTasks />} />
-        <Route path="pending" element={<PendingTasks />} />
+        <Route path="pending" element={<PendingTask />} />
         <Route path="in-progress" element={<InProgressTasks />} />
         <Route path="completed" element={<CompletedTasks />} />
         <Route path="" element={<Navigate to="all" replace />} />
